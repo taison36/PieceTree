@@ -1,0 +1,2 @@
+Write GoogleTests for insert function of piecetree.
+
