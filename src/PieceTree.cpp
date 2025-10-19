@@ -422,40 +422,26 @@ PieceTree::Node *PieceTree::Node::balanceAndUpdate() {
     return node;
 };
 
-std::vector<PieceTree::Piece> PieceTree::getLinePiecesFromPosition(Position &start) {
-    std::vector<Piece> pieces;
-    // clear the beginning of the piece
-    // find the end and clear it also
-    pieces.push_back(start.node->piece);
-    if (start.piece_offset > 0) {
-        // cut the lines before
-        pieces.back().cutLeftSide(start.piece_offset);
-    }
+std::vector<const PieceTree::Piece*> PieceTree::getLinePiecesFromPosition(const Position &start){
+    std::vector<const Piece*> pieces;
+    Node* current = start.node;
+
+    pieces.push_back(&current->piece);
 
     bool end_line_in_piece = false;
-    for (int i : pieces.back().line_breaks) {
-        if (i > start.piece_offset) {
-            if (i + 1 < pieces.back().length) {
-                pieces.back().cutRightSide(i + 1);
-            }
+    for (int br : current->piece.line_breaks) {
+        if (br > start.piece_offset) {
             end_line_in_piece = true;
+            break;
         }
     }
 
     while (!end_line_in_piece) {
-        auto *temp = start.node->next();
-        if (!temp) {
-            // the last line in the tree
-            end_line_in_piece = true;
-            break;
-        }
-        start.node = temp;
-        pieces.push_back(start.node->piece);
-        if (!start.node->piece.line_breaks.empty()) {
-            int i = start.node->piece.line_breaks[0];
-            if (i + 1 < pieces.back().length) {
-                pieces.back().cutRightSide(i + 1);
-            }
+        current = current->next();
+        if (!current) break;
+
+        pieces.push_back(&current->piece);
+        if (!current->piece.line_breaks.empty()) {
             end_line_in_piece = true;
         }
     }
@@ -567,7 +553,7 @@ void PieceTree::remove(int line, int column, int length) {
     removeStartingFromPosition(start_pos, length);
 }
 
-std::vector<PieceTree::Piece> PieceTree::getLinePieces(int line) {
+std::vector<const PieceTree::Piece *> PieceTree::getLinePieces(int line) {
     std::optional<Position> result = findVisualLine(line, root);
     if (!result) {
         throw PieceTreeException("Getting: line " + std::to_string(line) + " not found in piece table");

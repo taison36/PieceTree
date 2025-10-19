@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <stack>
 #include <exception>
 #include <optional>
+#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,7 +24,7 @@ class PieceTreeException : public std::exception {
 };
 
 class PieceTree {
-    public:
+  public:
     struct Piece {
         NodeType type;
         int offset; // 0-based
@@ -36,7 +36,8 @@ class PieceTree {
         void cutLeftSide(int cut_offset);
         int getLine(int piece_offset);
     };
-    private:
+
+  private:
     class Node {
       public:
         Piece piece;
@@ -105,14 +106,14 @@ class PieceTree {
     std::pair<Node *, Node *> splitAt(Position &pos);
     void insertNodeAtPosition(const Position &insert, Node *new_node);
     void removeStartingFromPosition(const Position &start, int length);
-    std::vector<Piece> getLinePiecesFromPosition(Position &start);
+    static std::vector<const Piece *> getLinePiecesFromPosition(const Position &start);
 
   public:
     void insert(const Piece &new_piece, int insertion_line, int insertion_column);
     void remove(int line, int column, int length);
-    std::vector<Piece> getLinePieces(int line);
+    std::vector<const Piece *> getLinePieces(int line);
     Iterator begin() { return Iterator(root); }
     Iterator end() { return Iterator(nullptr); }
 };
 
-#endif  // PieceTree_H
+#endif // PieceTree_H

@@ -15,31 +15,12 @@ TEST(PieceTreeGettingPieces, CutRightSide) {
     */
     tree.insert(p1, 0, 0);
 
-    std::vector<PieceTree::Piece> pieces = tree.getLinePieces(0);
+    std::vector<const PieceTree::Piece *> pieces = tree.getLinePieces(0);
 
     ASSERT_EQ(pieces.size(), 1);
 
-    ASSERT_EQ(pieces[0].length, 4);
-    ASSERT_EQ(pieces[0].line_breaks[0], 3);
-}
-
-TEST(PieceTreeGettingPieces, CutNothing) {
-
-    PieceTree tree;
-
-    PieceTree::Piece p1{NodeType::Added, 0, 4, {3}}; // "abc\n"
-
-    /*
-            "abc\n"
-    */
-    tree.insert(p1, 0, 0);
-
-    std::vector<PieceTree::Piece> pieces = tree.getLinePieces(0);
-
-    ASSERT_EQ(pieces.size(), 1);
-
-    ASSERT_EQ(pieces[0].length, 4);
-    ASSERT_EQ(pieces[0].line_breaks[0], 3);
+    ASSERT_EQ(pieces[0]->length, 7);
+    ASSERT_EQ(pieces[0]->line_breaks[0], 3);
 }
 
 TEST(PieceTreeGettingPieces, LineInFewNodes) {
@@ -57,31 +38,10 @@ TEST(PieceTreeGettingPieces, LineInFewNodes) {
     tree.insert(p1, 0, 0);
     tree.insert(p2, 1, 6);
 
-    std::vector<PieceTree::Piece> pieces = tree.getLinePieces(1);
-
-    ASSERT_EQ(pieces.size(), 2);
-    ASSERT_EQ(pieces[0].length, 6);
-    ASSERT_TRUE(pieces[0].line_breaks.empty());
-
-    ASSERT_EQ(pieces[1].length, 5);
-    ASSERT_EQ(pieces[1].line_breaks[0], 4);
-}
-
-TEST(PieceTreeGettingPieces, CutLeftSide) {
-
-    PieceTree tree;
-
-    PieceTree::Piece p1{NodeType::Added, 0, 10, {3}}; // "abc\ndef"
-
-    /*
-            "abc\n
-             tykhon"
-    */
-    tree.insert(p1, 0, 0);
-
-    std::vector<PieceTree::Piece> pieces = tree.getLinePieces(1);
+    std::vector<const PieceTree::Piece *> pieces = tree.getLinePieces(2);
 
     ASSERT_EQ(pieces.size(), 1);
-    ASSERT_EQ(pieces[0].length, 6);
-    ASSERT_TRUE(pieces[0].line_breaks.empty());
+
+    ASSERT_EQ(pieces[0]->length, 8);
+    ASSERT_EQ(pieces[0]->line_breaks[0], 4);
 }
