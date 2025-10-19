@@ -58,7 +58,7 @@ int PieceTree::Piece::getLine(int piece_offset) {
 }
 
 void PieceTree::Piece::cutRightSide(int cut_offset) {
-    //"def"
+    // including cut_offset
     length = cut_offset != 0 ? cut_offset : 1;
     for (int i = 0; i < line_breaks.size(); i++) {
         if (line_breaks[i] > length) {
@@ -71,14 +71,14 @@ void PieceTree::Piece::cutRightSide(int cut_offset) {
 
 void PieceTree::Piece::cutLeftSide(int cut_offset) {
     // including offset
-    offset += cut_offset + 1;
-    length -= cut_offset + 1;
+    offset += cut_offset;
+    length -= cut_offset;
 
     line_breaks.erase(std::remove_if(line_breaks.begin(), line_breaks.end(), [&](int br) { return br < cut_offset; }),
                       line_breaks.end());
 
     for (int &br : line_breaks) {
-        br -= cut_offset + 1;
+        br -= cut_offset;
     }
 }
 
@@ -310,7 +310,7 @@ PieceTree::Position PieceTree::findVisualColumn(Node *node, int offset_line_begi
     int piece_offset = offset_line_begin + visual_column;
 
     if (piece_line < node->piece.line_breaks.size() && piece_offset >= node->piece.line_breaks[piece_line]) {
-        throw InsertionException("insertion column " + std::to_string(visual_column) + " is out of line bounds");
+        throw PieceTreeException("insertion column " + std::to_string(visual_column) + " is out of line bounds");
     }
 
     while (piece_offset > node->piece.length) {
@@ -318,11 +318,11 @@ PieceTree::Position PieceTree::findVisualColumn(Node *node, int offset_line_begi
 
         node = node->next();
         if (!node) {
-            throw InsertionException("insertion column " + std::to_string(visual_column) + " beyond document length");
+            throw PieceTreeException("insertion column " + std::to_string(visual_column) + " beyond document length");
         }
 
         if (!node->piece.line_breaks.empty() && piece_offset >= node->piece.line_breaks[0]) {
-            throw InsertionException("insertion column " + std::to_string(visual_column) + " is out of line bounds");
+            throw PieceTreeException("insertion column " + std::to_string(visual_column) + " is out of line bounds");
         }
     }
 
@@ -422,9 +422,50 @@ PieceTree::Node *PieceTree::Node::balanceAndUpdate() {
     return node;
 };
 
+std::vector<PieceTree::Piece> PieceTree::getLinePiecesFromPosition(Position &start) {
+    std::vector<Piece> pieces;
+    // clear the beginning of the piece
+    // find the end and clear it also
+    pieces.push_back(start.node->piece);
+    if (start.piece_offset > 0) {
+        // cut the lines before
+        pieces.back().cutLeftSide(start.piece_offset);
+    }
+
+    bool end_line_in_piece = false;
+    for (int i : pieces.back().line_breaks) {
+        if (i > start.piece_offset) {
+            if (i + 1 < pieces.back().length) {
+                pieces.back().cutRightSide(i + 1);
+            }
+            end_line_in_piece = true;
+        }
+    }
+
+    while (!end_line_in_piece) {
+        auto *temp = start.node->next();
+        if (!temp) {
+            // the last line in the tree
+            end_line_in_piece = true;
+            break;
+        }
+        start.node = temp;
+        pieces.push_back(start.node->piece);
+        if (!start.node->piece.line_breaks.empty()) {
+            int i = start.node->piece.line_breaks[0];
+            if (i + 1 < pieces.back().length) {
+                pieces.back().cutRightSide(i + 1);
+            }
+            end_line_in_piece = true;
+        }
+    }
+
+    return pieces;
+}
+
 void PieceTree::removeStartingFromPosition(const Position &start, int cut_length) {
     if (!start.node) {
-        throw RemovingException("The node of the starting removal position is nullptr");
+        throw PieceTreeException("The node of the starting removal position is nullptr");
     }
     Node *r_node = start.node;
     int r_piece_offset = start.piece_offset;
@@ -456,7 +497,7 @@ void PieceTree::removeStartingFromPosition(const Position &start, int cut_length
                 if (cut_length > 0) {
                     auto *temp = r_node->next();
                     if (!temp) {
-                        throw RemovingException(
+                        throw PieceTreeException(
                             "The length of the cutout is greater than the length of the WHOLE text");
                     }
                     r_node = temp;
@@ -467,7 +508,7 @@ void PieceTree::removeStartingFromPosition(const Position &start, int cut_length
             if (r_piece_offset + cut_length < r_node->piece.length) {
                 // cut left side
                 int old_piece_length = r_node->piece.length;
-                r_node->piece.cutLeftSide(r_piece_offset);
+                r_node->piece.cutLeftSide(r_piece_offset + cut_length);
                 cut_length -= old_piece_length - r_node->piece.length;
             } else if (r_piece_offset + cut_length >= r_node->piece.length) {
                 // remove the hole node
@@ -475,7 +516,7 @@ void PieceTree::removeStartingFromPosition(const Position &start, int cut_length
                 if (cut_length > 0) {
                     auto *temp = r_node->next();
                     if (!temp) {
-                        throw RemovingException(
+                        throw PieceTreeException(
                             "The length of the cutout is greater than the length of the WHOLE text");
                     }
                     r_node = temp;
@@ -500,7 +541,7 @@ void PieceTree::insert(const Piece &new_piece, int insertion_line, int insertion
 
     std::optional<Position> result = findVisualLine(insertion_line, root);
     if (!result) {
-        throw InsertionException("Insertion: line " + std::to_string(insertion_line) + " not found in piece table");
+        throw PieceTreeException("Insertion: line " + std::to_string(insertion_line) + " not found in piece table");
     }
     Position insert = *result;
     insert = findVisualColumn(insert.node, insert.piece_offset, insertion_column);
@@ -515,13 +556,23 @@ void PieceTree::insert(const Piece &new_piece, int insertion_line, int insertion
 // column is not automatically included, so the min length is 1;
 void PieceTree::remove(int line, int column, int length) {
     if (length < 1)
-        throw RemovingException("Cut length must be greater than 0");
+        throw PieceTreeException("Cut length must be greater than 0");
     std::optional<Position> result = findVisualLine(line, root);
     if (!result) {
-        throw RemovingException("Removing: line " + std::to_string(line) + " not found in piece table");
+        throw PieceTreeException("Removing: line " + std::to_string(line) + " not found in piece table");
     }
     Position start_pos = *result;
     start_pos = findVisualColumn(start_pos.node, start_pos.piece_offset, column);
 
     removeStartingFromPosition(start_pos, length);
+}
+
+std::vector<PieceTree::Piece> PieceTree::getLinePieces(int line) {
+    std::optional<Position> result = findVisualLine(line, root);
+    if (!result) {
+        throw PieceTreeException("Getting: line " + std::to_string(line) + " not found in piece table");
+    }
+    Position line_pos = *result;
+
+    return getLinePiecesFromPosition(line_pos);
 }

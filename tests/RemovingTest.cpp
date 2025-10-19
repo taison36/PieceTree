@@ -1,7 +1,6 @@
 #include "../src/PieceTree.h"
 #include "Util.h"
 #include <gtest/gtest.h>
-#include <iostream>
 #include <ostream>
 
 TEST(PieceTreeRemoving, RemoveStart) {
@@ -15,9 +14,9 @@ TEST(PieceTreeRemoving, RemoveStart) {
     */
     tree.insert(p1, 0, 0);
 
-    tree.remove(0,0,1); // e is deleted
+    tree.remove(0,0,3);
     /*
-            "bc\n
+            "\n
              def"
     */
 
@@ -25,8 +24,8 @@ TEST(PieceTreeRemoving, RemoveStart) {
 
     ASSERT_EQ(pieces.size(), 1);
 
-    ASSERT_EQ(pieces[0].length, 6);
-    ASSERT_EQ(pieces[0].line_breaks[0], 2);
+    ASSERT_EQ(pieces[0].length, 4);
+    ASSERT_EQ(pieces[0].line_breaks[0], 0);
 }
 
 TEST(PieceTreeRemoving, RemoveBeetwen) {
@@ -128,7 +127,7 @@ TEST(PieceTreeRemoving, RemovingMoreThanPossible) {
     */
 
     ;
-    EXPECT_THROW(tree.remove(0,1,7), RemovingException);
+    EXPECT_THROW(tree.remove(0,1,7), PieceTreeException);
 }
 
 TEST(PieceTreeRemoving, RemovingWholeNode) {

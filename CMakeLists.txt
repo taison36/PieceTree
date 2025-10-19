@@ -23,6 +23,7 @@ add_executable(MyTests tests/InsertionTest.cpp
         tests/RemovingTest.cpp
         tests/Util.cpp
         tests/Util.h
+        tests/GetLinePiecesTest.cpp
 )
 target_link_libraries(MyTests
     PRIVATE PieceTree 

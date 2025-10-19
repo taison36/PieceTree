@@ -12,24 +12,13 @@
 
 enum class NodeType { Original, Added };
 
-class InsertionException : public std::exception {
+class PieceTreeException : public std::exception {
     std::string message;
 
   public:
-    InsertionException(const std::string &msg) : message(msg) {}
+    PieceTreeException(const std::string &msg) : message(msg) {}
 
-    InsertionException(const char *msg) : message(msg) {}
-
-    const char *what() const noexcept { return message.c_str(); }
-};
-
-class RemovingException : public std::exception {
-    std::string message;
-
-  public:
-    RemovingException(const std::string &msg) : message(msg) {}
-
-    RemovingException(const char *msg) : message(msg) {}
+    PieceTreeException(const char *msg) : message(msg) {}
 
     const char *what() const noexcept { return message.c_str(); }
 };
@@ -116,10 +105,12 @@ class PieceTree {
     std::pair<Node *, Node *> splitAt(Position &pos);
     void insertNodeAtPosition(const Position &insert, Node *new_node);
     void removeStartingFromPosition(const Position &start, int length);
+    std::vector<Piece> getLinePiecesFromPosition(Position &start);
 
   public:
     void insert(const Piece &new_piece, int insertion_line, int insertion_column);
     void remove(int line, int column, int length);
+    std::vector<Piece> getLinePieces(int line);
     Iterator begin() { return Iterator(root); }
     Iterator end() { return Iterator(nullptr); }
 };

@@ -1,2 +1,5 @@
-Write GoogleTests for insert function of piecetree.
+1. getLinePieces() func, a vector of the pieces of the certainly line is returned. First/last piece is adjusted, so the text_buffer
+implementation don't need to take care about other lines or something. I would just cut it out from the pieces.
+For fast reading is made a vector of copies, not of the pointers.
 
+2. To implement undo/redo i will maintain stacks
