@@ -16,11 +16,11 @@ class PieceTreeException : public std::exception {
     std::string message;
 
   public:
-    PieceTreeException(const std::string &msg) : message(msg) {}
+    explicit PieceTreeException(std::string msg) : message(std::move(msg)) {}
 
-    PieceTreeException(const char *msg) : message(msg) {}
+    explicit PieceTreeException(const char *msg) : message(msg) {}
 
-    const char *what() const noexcept { return message.c_str(); }
+    [[nodiscard]] const char *what() const noexcept override { return message.c_str(); }
 };
 
 class PieceTree {
@@ -92,18 +92,16 @@ class PieceTree {
     };
 
     struct Position {
-      public:
         Node *node;
         int piece_offset;
 
-        Position(Node *n, int o) : node(n), piece_offset(o) {}
+        Position(Node *n, const int o) : node(n), piece_offset(o) {}
     };
 
     Node *root = nullptr;
 
     std::optional<Position> findVisualLine(int line, Node *node);
     Position findVisualColumn(Node *node, int offset_line_begin, int visual_column);
-    std::pair<Node *, Node *> splitAt(Position &pos);
     void insertNodeAtPosition(const Position &insert, Node *new_node);
     void removeStartingFromPosition(const Position &start, int length);
     static std::vector<const Piece *> getLinePiecesFromPosition(const Position &start);
