@@ -13,10 +13,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # PieceTree library
-add_library(PieceTree
+add_library(PieceTree STATIC
     src/PieceTree.cpp
 )
-target_include_directories(PieceTree PUBLIC src)
+target_include_directories(PieceTree PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Tests
 add_executable(MyTests tests/InsertionTest.cpp

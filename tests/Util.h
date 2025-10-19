@@ -4,7 +4,7 @@
 
 #ifndef UTIL_H
 #define UTIL_H
-#include "PieceTree.h"
+#include "../include/PieceTree.h"
 
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include "../src/PieceTree.h"
+#include "../include/PieceTree.h"
 #include "Util.h"
 #include <gtest/gtest.h>
 #include <ostream>
